@@ -10,9 +10,11 @@ import k from 'tinyrainbow'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { version } from '../../package.json' with { type: 'json' }
+import { analyzeCmd } from './analyze'
 import buildCmd from './build'
 import { checkAvailableUpdate, notifyAvailableUpdate } from './check-update'
 import codegenCmd from './codegen'
+import correctnessCmd from './correctness'
 import exportCmd from './export'
 import previewCmd from './preview'
 import serveCmd from './serve'
@@ -45,6 +47,8 @@ async function main() {
     .command(exportCmd)
     .command(previewCmd)
     .command(validateCmd)
+    .command(correctnessCmd)
+    .command(analyzeCmd)
     .command({
       command: 'check-update',
       describe: 'Check for updates',

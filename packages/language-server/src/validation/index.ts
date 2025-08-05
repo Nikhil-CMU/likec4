@@ -5,6 +5,13 @@ import { type LikeC4AstNode, type LikeC4LangiumDocument, ast } from '../ast'
 import { logger } from '../logger'
 import type { LikeC4Services } from '../module'
 import {
+  checkCyclicDependencies,
+  checkElementConnectivity,
+  checkElementLayerInfo,
+  checkElementPerformanceMetadata,
+  checkMislayering,
+} from './correctness'
+import {
   deployedInstanceChecks,
   deploymentNodeChecks,
   deploymentRelationChecks,
@@ -156,10 +163,16 @@ export function registerValidationChecks(services: LikeC4Services) {
     GlobalStyleId: checkGlobalStyleId(services),
     DynamicViewStep: dynamicViewStep(services),
     LikeC4View: viewChecks(services),
-    Element: checkElement(services),
+    LikeC4Grammar: checkCyclicDependencies(services),
+    Element: [
+      checkElement(services),
+      checkElementConnectivity(services),
+      checkElementLayerInfo(services),
+      checkElementPerformanceMetadata(services),
+    ],
     ElementRef: checkElementRef(services),
     ElementKind: checkElementKind(services),
-    Relation: relationChecks(services),
+    Relation: [relationChecks(services), checkMislayering(services)],
     RelationBody: checkRelationBody(services),
     Tag: checkTag(services),
     FqnExprWith: checkFqnExprWith(services),
