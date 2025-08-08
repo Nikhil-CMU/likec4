@@ -36,23 +36,25 @@ pnpm install
 
 ## Initial Setup (Required)
 
-After cloning and installing dependencies, you must generate the required language server files:
+After cloning and installing dependencies, you must generate the required files in the correct order:
 
 ```bash
-# Generate Langium language server files
-cd packages/language-server
+# Step 1: Generate icons first (required dependency)
+cd packages/icons
 pnpm generate
 
-# Generate icons for the language server
-cd ../icons
-pnpm generate
-
-# Generate the remaining language server icons
+# Step 2: Generate Langium language server files
 cd ../language-server
+pnpm langium generate
+
+# Step 3: Generate the remaining language server icons
 pnpm tsx scripts/generate-icons.ts
+
+# Step 4: Return to project root
+cd ../..
 ```
 
-**Note:** These steps are required before running any LikeC4 commands. Without these generated files, you'll encounter module not found errors.
+**Note:** These steps must be run in this exact order. The language server generation depends on icons being available first.
 
 ### Quick Setup Script
 
@@ -60,9 +62,20 @@ For convenience, you can also run all setup steps with a single command from the
 
 ```bash
 # From the likec4 root directory
-pnpm --filter @likec4/icons generate && \
-pnpm --filter @likec4/language-server generate && \
-cd packages/language-server && pnpm tsx scripts/generate-icons.ts
+cd packages/icons && pnpm generate && \
+cd ../language-server && pnpm langium generate && pnpm tsx scripts/generate-icons.ts && \
+cd ../..
+```
+
+### Verification
+
+To verify the setup completed successfully, check that these files exist:
+
+```bash
+# Check generated files exist
+ls packages/icons/all.js
+ls packages/language-server/src/generated/module.ts
+ls packages/language-server/src/generated-lib/icons.ts
 ```
 
 ## What Files Were Changed
@@ -83,18 +96,19 @@ cd packages/language-server && pnpm tsx scripts/generate-icons.ts
 If you make changes to the source code, rebuild with:
 
 ```bash
-# First, regenerate language server files if needed
-cd packages/language-server
-pnpm generate
-cd ../icons
+# First, regenerate files in correct order if needed
+cd packages/icons
 pnpm generate
 cd ../language-server
+pnpm langium generate
 pnpm tsx scripts/generate-icons.ts
 
-# Then build all packages
+# Then build all packages (optional - CLI works without this)
 cd ../..
 pnpm turbo run build
 ```
+
+**Note:** The build step is optional for CLI usage. If you encounter Node.js version compatibility issues with the build step, you can still use the CLI functionality by skipping `pnpm turbo run build`.
 
 ## How to Test the Changes
 
@@ -108,4 +122,44 @@ pnpm start correctness ../../correctness-example
 ```bash
 ./reinstall-local-language-server
 code correctness-example/
+```
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+1. **Error: Cannot find module '...generated/module'**
+   - **Cause:** Language server files not generated or generated in wrong order
+   - **Solution:** Run the setup steps in correct order, icons first then language server
+
+2. **Error: Cannot find module '@likec4/icons/all.js'**
+   - **Cause:** Icons not generated before language server generation
+   - **Solution:** Run `cd packages/icons && pnpm generate` first
+
+3. **Node.js version warnings**
+   - **Cause:** Using Node.js version older than 20.19.3
+   - **Impact:** CLI functionality works, but build may fail
+   - **Solution:** Either upgrade Node.js or skip the `pnpm turbo run build` step
+
+4. **Build fails with 'addAbortListener' error**
+   - **Cause:** Node.js version compatibility issue
+   - **Solution:** CLI works without building - skip `pnpm turbo run build`
+
+### Quick Fix for Setup Issues
+
+If you encounter any setup issues, try this complete reset:
+
+```bash
+# Clean and restart
+rm -rf packages/icons/all.js packages/icons/all.d.ts
+rm -rf packages/language-server/src/generated/*
+rm -rf packages/language-server/src/generated-lib/*
+
+# Run setup in correct order
+cd packages/icons && pnpm generate
+cd ../language-server && pnpm langium generate && pnpm tsx scripts/generate-icons.ts
+cd ../..
+
+# Test CLI
+cd packages/likec4 && pnpm start correctness ../../correctness-example
 ```
