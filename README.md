@@ -34,6 +34,37 @@ cd likec4
 pnpm install
 ```
 
+## Initial Setup (Required)
+
+After cloning and installing dependencies, you must generate the required language server files:
+
+```bash
+# Generate Langium language server files
+cd packages/language-server
+pnpm generate
+
+# Generate icons for the language server
+cd ../icons
+pnpm generate
+
+# Generate the remaining language server icons
+cd ../language-server
+pnpm tsx scripts/generate-icons.ts
+```
+
+**Note:** These steps are required before running any LikeC4 commands. Without these generated files, you'll encounter module not found errors.
+
+### Quick Setup Script
+
+For convenience, you can also run all setup steps with a single command from the project root:
+
+```bash
+# From the likec4 root directory
+pnpm --filter @likec4/icons generate && \
+pnpm --filter @likec4/language-server generate && \
+cd packages/language-server && pnpm tsx scripts/generate-icons.ts
+```
+
 ## What Files Were Changed
 
 ### CLI Implementation
@@ -49,7 +80,19 @@ pnpm install
 
 ## How to Rebuild
 
+If you make changes to the source code, rebuild with:
+
 ```bash
+# First, regenerate language server files if needed
+cd packages/language-server
+pnpm generate
+cd ../icons
+pnpm generate
+cd ../language-server
+pnpm tsx scripts/generate-icons.ts
+
+# Then build all packages
+cd ../..
 pnpm turbo run build
 ```
 
